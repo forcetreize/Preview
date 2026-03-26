@@ -21,8 +21,8 @@
       --blue: #1591f0;
       --blue-hover: rgba(21,145,240,0.35);
       --black: #1e232f;
-      --grey-text: #7c83a1;
-      --grey-muted: #9ca3af;
+      --grey-text: #5e6680;
+      --grey-muted: #6b7280;
       --grey-border: #e5e7ef;
       --grey-bg: #f8f9fa;
       --grey-toggle: #e5e7ef;
@@ -89,7 +89,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 28px 32px 24px;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--grey-border);
     }
     .logo {
       font-size: 36px;
@@ -103,7 +104,7 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
-      padding: 28px 32px;
+      padding: 24px 32px 28px;
     }
 
     /* ── TITLE BLOCK ── */
@@ -150,7 +151,7 @@
     .opt-row + .opt-row {
       border-top: 1px solid var(--grey-border);
     }
-    .opt-row:hover { background: var(--grey-bg); }
+    .opt-row:hover { background: #eff0f5; }
     .opt-row:first-child { border-radius: 9px 9px 0 0; }
     .opt-row:last-child  { border-radius: 0 0 9px 9px; }
 
@@ -220,7 +221,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px;
+      padding: 16px;
     }
     .trans-left { display: flex; flex-direction: column; gap: 2px; }
     .trans-title {
@@ -298,13 +299,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 0;
       /* Emil press feedback */
       transition:
         transform 80ms ease,
         opacity 150ms ease,
         background 300ms var(--ease-out),
         box-shadow 200ms ease;
+    }
+    .cta-btn:focus-visible {
+      outline: 3px solid rgba(21,145,240,0.45);
+      outline-offset: 2px;
     }
     .cta-btn:hover {
       opacity: 0.92;
@@ -322,13 +327,20 @@
     .cta-btn .check-icon {
       display: inline-block;
       opacity: 0;
+      width: 0;
+      overflow: hidden;
+      margin-right: 0;
       transform: scale(0.5) rotate(-10deg);
       transition:
         opacity 200ms ease,
-        transform 300ms var(--ease-spring);
+        transform 300ms var(--ease-spring),
+        width 220ms var(--ease-out),
+        margin-right 220ms var(--ease-out);
     }
     .cta-btn.success .check-icon {
       opacity: 1;
+      width: 1em;
+      margin-right: 8px;
       transform: scale(1) rotate(0deg);
     }
 
@@ -342,7 +354,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     .danger-title {
       font-size: 14px; font-weight: 600;
@@ -373,6 +385,10 @@
         border-color 200ms ease,
         transform 100ms ease;
     }
+    .danger-btn:focus-visible {
+      outline: 3px solid rgba(190,18,60,0.3);
+      outline-offset: 2px;
+    }
     .danger-btn:hover {
       background: #fff1f2;
       color: #9f1239;
@@ -401,9 +417,9 @@
     .footer-div {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
-      padding: 16px 32px 24px;
+      padding: 20px 32px 24px;
     }
     .sep {
       width: 100%;
