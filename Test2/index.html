@@ -11,8 +11,10 @@
     /* ── REDUCED MOTION ── */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
+        animation-duration:        0.01ms !important;
+        animation-iteration-count: 1      !important;  /* fix: loops survivaient */
+        transition-duration:       0.01ms !important;
+        scroll-behavior:           auto   !important;
       }
     }
 
@@ -31,8 +33,14 @@
       --red-bg:       #fff5f6;
       --red-border:   #fecdd3;
       --green:        #16a34a;
-      --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
-      --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* fix: linear() spring — plus précis que cubic-bezier (Jhey) */
+      --ease-spring: linear(
+        0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25%,
+        0.849 30.7%, 0.937 36.4%, 0.985 42.1%, 1.007 47.8%, 1.012,
+        1.008 64.3%, 1 72.9%, 0.998 79.3%, 1
+      );
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -64,8 +72,9 @@
       animation: card-in 0.5s var(--ease-out) both;
     }
 
+    /* fix: translateY 18px→12px (Jakub: 8–12px max) + blur 5→4px */
     @keyframes card-in {
-      from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
+      from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
       to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
     }
 
@@ -148,6 +157,9 @@
       cursor: pointer;
       transition: background 140ms ease;
       user-select: none;
+      /* fix: stagger via CSS custom property --i (Jakub + Jhey) */
+      animation: item-in 0.35s var(--ease-out) both;
+      animation-delay: calc(0.22s + var(--i, 0) * 65ms);
     }
     li[data-ui="email-item"] + li[data-ui="email-item"] {
       border-top: 1px solid var(--grey-border);
@@ -155,6 +167,11 @@
     li[data-ui="email-item"]:first-child { border-radius: 12px 12px 0 0; }
     li[data-ui="email-item"]:last-child  { border-radius: 0 0 12px 12px; }
     li[data-ui="email-item"]:hover       { background: #f1f2f6; }
+
+    @keyframes item-in {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     /* ── ITEM LABEL ── */
     .item-label {
@@ -178,8 +195,7 @@
     }
 
     /* ════════════════════════════
-       STATE CHIP  (replaces toggle)
-       — Inactif  /  ✓ Actif
+       STATE CHIP
     ════════════════════════════ */
     .state-chip {
       display: inline-flex;
@@ -209,12 +225,8 @@
       outline: 3px solid var(--blue-dim);
       outline-offset: 2px;
     }
-    .state-chip:hover {
-      border-color: #c8cad4;
-    }
-    .state-chip:active {
-      transform: scale(0.94);
-    }
+    .state-chip:hover { border-color: #c8cad4; }
+    .state-chip:active { transform: scale(0.94); }
     .state-chip.on {
       background: var(--blue);
       border-color: var(--blue);
@@ -226,16 +238,44 @@
       border-color: #1080d8;
     }
 
-    /* Chip icon — spring pop when toggling on */
+    /* chip icon — morphose de path SVG via CSS `d` property */
     .chip-icon {
-      font-style: normal;
-      font-size: 11px;
-      line-height: 1;
-      display: inline-block;
-      transition: transform 320ms var(--ease-spring);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 13px;
+      height: 13px;
+      transition: transform 400ms var(--ease-spring);
     }
+    .chip-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* Inactive — cercle (départ au point gauche, sens horaire, 4 beziers) */
+    .chip-path {
+      d: path("M 1.5 6.5 C 1.5 3.74 3.74 1.5 6.5 1.5 C 9.26 1.5 11.5 3.74 11.5 6.5 C 11.5 9.26 9.26 11.5 6.5 11.5 C 3.74 11.5 1.5 9.26 1.5 6.5");
+      transition: d 420ms var(--ease-spring);
+    }
+
+    /* Active — checkmark (même structure 4 beziers, même point de départ) */
+    .state-chip.on .chip-path {
+      d: path("M 1.5 6.5 C 1.5 6.5 3.0 7.5 5.0 9.5 C 5.0 9.5 7.75 6.5 10.5 3.5 C 10.5 3.5 10.5 3.5 10.5 3.5 C 10.5 3.5 7.0 4.0 1.5 6.5");
+    }
+
     .state-chip.on .chip-icon {
-      transform: scale(1.2);
+      transform: scale(1.08);
+    }
+
+    /* fix: chip label — micro-fade sur le swap de texte */
+    .chip-label {
+      display: inline-block;
+      transition:
+        opacity   80ms ease,
+        transform 80ms ease;
     }
 
     /* ════════════════════════════
@@ -251,12 +291,8 @@
       border: 1px solid var(--grey-border);
       border-radius: 13px;
     }
-    div[data-ui="email-locked"] .item-label strong {
-      color: var(--grey-text);
-    }
-    div[data-ui="email-locked"] .item-label span {
-      color: var(--grey-muted);
-    }
+    div[data-ui="email-locked"] .item-label strong { color: var(--grey-text); }
+    div[data-ui="email-locked"] .item-label span   { color: var(--grey-muted); }
 
     .lock-badge {
       display: inline-flex;
@@ -277,7 +313,6 @@
       letter-spacing: 0.1px;
       white-space: nowrap;
     }
-    /* Tooltip */
     .lock-badge::before {
       content: 'Impossible de désactiver';
       position: absolute;
@@ -331,6 +366,7 @@
       align-items: center;
       justify-content: center;
       gap: 0;
+      will-change: transform, opacity;
       transition:
         transform    80ms ease,
         opacity     150ms ease,
@@ -349,28 +385,44 @@
       transform: scale(0.98);
       opacity: 0.85;
     }
+    /* fix: scale 1.01 → 1.03 + spring overshoot (Jhey delight) */
     button[data-ui="cta"].success {
       background: var(--green);
-      transform: scale(1.01);
-      box-shadow: 0 4px 20px rgba(22,163,74,0.28);
+      transform: scale(1.03);
+      box-shadow: 0 6px 28px rgba(22,163,74,0.32);
+      transition:
+        transform    420ms var(--ease-spring),
+        background   300ms var(--ease-out),
+        box-shadow   300ms ease,
+        opacity      150ms ease;
     }
+
+    /* fix: btn-text — fade on text swap */
+    .btn-text {
+      display: inline-block;
+      transition:
+        opacity   120ms ease,
+        transform 120ms var(--ease-out);
+    }
+
+    /* fix: check-icon — removed width + margin-right from transitions (layout props)
+       Width snaps instantly; opacity + spring handle the perceived animation */
     .check-icon {
       display: inline-block;
       opacity: 0;
       width: 0;
       overflow: hidden;
-      margin-right: 0;
-      transform: scale(0.5) rotate(-10deg);
+      /* fix: scale 0.5 → 0.85 (Emil: don't animate from < 0.9) */
+      transform: scale(0.85) rotate(-8deg);
       transition:
-        opacity      200ms ease,
-        transform    300ms var(--ease-spring),
-        width        220ms var(--ease-out),
-        margin-right 220ms var(--ease-out);
+        opacity   200ms ease,
+        transform 280ms var(--ease-spring);
+      /* Removed: width 220ms, margin-right 220ms — layout-triggering */
     }
     button[data-ui="cta"].success .check-icon {
       opacity: 1;
-      width: 1em;
-      margin-right: 8px;
+      width: 1em;       /* instant — one layout paint, not animated */
+      margin-right: 8px; /* instant — same */
       transform: scale(1) rotate(0deg);
     }
 
@@ -427,12 +479,9 @@
       color: #9f1239;
       border-color: #fda4af;
     }
-    button[data-ui="danger-btn"]:active {
-      transform: scale(0.97);
-    }
-    button[data-ui="danger-btn"].shake {
-      animation: shake 400ms ease;
-    }
+    button[data-ui="danger-btn"]:active { transform: scale(0.97); }
+    button[data-ui="danger-btn"].shake  { animation: shake 400ms ease; }
+
     @keyframes shake {
       0%   { transform: translateX(0); }
       15%  { transform: translateX(-5px); }
@@ -485,6 +534,7 @@
       z-index: 999;
       opacity: 0;
       pointer-events: none;
+      will-change: transform, opacity;
       transition:
         transform 380ms var(--ease-spring),
         opacity   300ms ease;
@@ -523,35 +573,36 @@
         <p class="section-label">Emails optionnels</p>
         <ul data-ui="email-list">
 
-          <li data-ui="email-item" data-id="customer-service">
+          <!-- fix: style="--i:N" pour le stagger CSS (Jakub + Jhey) -->
+          <li data-ui="email-item" data-id="customer-service" style="--i:0">
             <div class="item-label">
               <strong>Customer Service</strong>
               <span>Activité et évolutions de votre compte</span>
             </div>
             <button class="state-chip" role="switch" aria-checked="false" aria-label="Activer Customer Service">
-              <i class="chip-icon">–</i>
+              <i class="chip-icon"><svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path class="chip-path" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
               <span class="chip-label">Inactif</span>
             </button>
           </li>
 
-          <li data-ui="email-item" data-id="offres">
+          <li data-ui="email-item" data-id="offres" style="--i:1">
             <div class="item-label">
               <strong>Offres et bons plans</strong>
               <span>Conseils, nouveautés produit et opportunités</span>
             </div>
             <button class="state-chip" role="switch" aria-checked="false" aria-label="Activer Offres et bons plans">
-              <i class="chip-icon">–</i>
+              <i class="chip-icon"><svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path class="chip-path" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
               <span class="chip-label">Inactif</span>
             </button>
           </li>
 
-          <li data-ui="email-item" data-id="marketing">
+          <li data-ui="email-item" data-id="marketing" style="--i:2">
             <div class="item-label">
               <strong>Marketing</strong>
               <span>Communications, actualités et campagnes BTP</span>
             </div>
             <button class="state-chip on" role="switch" aria-checked="true" aria-label="Désactiver Marketing">
-              <i class="chip-icon">✓</i>
+              <i class="chip-icon"><svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path class="chip-path" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
               <span class="chip-label">Actif</span>
             </button>
           </li>
@@ -601,23 +652,38 @@
 
   <script>
     /* ════════════════════════════
-       STATE CHIP
+       STATE CHIP — CSS d property morph
+       L'icône morphe via CSS (circle → checkmark), pas de DOM swap
     ════════════════════════════ */
     function toggleChip(chip) {
+      if (chip._toggling) return;
+      chip._toggling = true;
+
+      const label = chip.querySelector('.chip-label');
+
+      /* Toggle immédiat → CSS `d` transition se déclenche */
       const isOn = chip.classList.toggle('on');
       chip.setAttribute('aria-checked', isOn);
-      const label = chip.closest('li').querySelector('strong').textContent;
-      chip.setAttribute('aria-label', (isOn ? 'Désactiver ' : 'Activer ') + label);
-      chip.querySelector('.chip-icon').textContent  = isOn ? '✓' : '–';
-      chip.querySelector('.chip-label').textContent = isOn ? 'Actif' : 'Inactif';
+      const itemLabel = chip.closest('li').querySelector('strong').textContent;
+      chip.setAttribute('aria-label', (isOn ? 'Désactiver ' : 'Activer ') + itemLabel);
+
+      /* Label : micro-fade uniquement */
+      label.style.opacity   = '0';
+      label.style.transform = 'translateY(-3px)';
+      setTimeout(() => {
+        label.textContent     = isOn ? 'Actif' : 'Inactif';
+        label.style.opacity   = '';
+        label.style.transform = '';
+        chip._toggling = false;
+      }, 80);
     }
 
-    /* Row click → toggle the chip */
+    /* Row click → toggle */
     document.querySelectorAll('li[data-ui="email-item"]').forEach(row => {
       row.addEventListener('click', () => toggleChip(row.querySelector('.state-chip')));
     });
 
-    /* Chip click — stop propagation so row handler doesn't double-fire */
+    /* Chip click — stop propagation (no double-fire) */
     document.querySelectorAll('.state-chip').forEach(chip => {
       chip.addEventListener('click', e => e.stopPropagation());
       chip.addEventListener('click', () => toggleChip(chip));
@@ -625,6 +691,7 @@
 
     /* ════════════════════════════
        SAVE PREFERENCES
+       fix: fade-out/in sur .btn-text au lieu de snap (Jakub)
     ════════════════════════════ */
     let saving = false;
     function savePreferences() {
@@ -632,15 +699,35 @@
       saving = true;
       const btn     = document.getElementById('ctaBtn');
       const btnText = btn.querySelector('.btn-text');
-      btn.classList.add('success');
-      btnText.textContent = 'Préférences enregistrées';
-      document.getElementById('toast').classList.add('visible');
+
+      /* ① Fade out text */
+      btnText.style.opacity   = '0';
+      btnText.style.transform = 'translateY(-4px)';
+
       setTimeout(() => {
-        btn.classList.remove('success');
-        btnText.textContent = 'Enregistrer mes préférences';
-        document.getElementById('toast').classList.remove('visible');
-        saving = false;
-      }, 2800);
+        /* ② Swap + state success */
+        btn.classList.add('success');
+        btnText.textContent     = 'Préférences enregistrées';
+        btnText.style.opacity   = '';
+        btnText.style.transform = '';
+        document.getElementById('toast').classList.add('visible');
+
+        setTimeout(() => {
+          /* ③ Fade out avant reset */
+          btnText.style.opacity   = '0';
+          btnText.style.transform = 'translateY(4px)';
+
+          setTimeout(() => {
+            /* ④ Reset */
+            btn.classList.remove('success');
+            btnText.textContent     = 'Enregistrer mes préférences';
+            btnText.style.opacity   = '';
+            btnText.style.transform = '';
+            document.getElementById('toast').classList.remove('visible');
+            saving = false;
+          }, 130);
+        }, 2550);
+      }, 130);
     }
 
     /* ════════════════════════════
@@ -650,7 +737,7 @@
     function confirmUnsubscribe() {
       const btn = document.getElementById('dangerBtn');
       if (confirmStep === 0) {
-        btn.textContent = 'Confirmer le désabonnement ?';
+        btn.textContent      = 'Confirmer le désabonnement ?';
         btn.style.background = '#fff1f2';
         btn.style.color      = '#9f1239';
         confirmStep = 1;
@@ -663,7 +750,7 @@
         }, 3000);
       } else {
         btn.classList.remove('shake');
-        void btn.offsetWidth; /* reflow */
+        void btn.offsetWidth;
         btn.classList.add('shake');
         btn.textContent      = 'Me désabonner de tout';
         btn.style.background = '';
