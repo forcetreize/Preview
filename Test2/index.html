@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Obat — Gérer vos notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ── REDUCED MOTION ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ════════════════════════════
+       TOKENS
+    ════════════════════════════ */
+    :root {
+      --blue:         #1591f0;
+      --blue-dim:     rgba(21, 145, 240, 0.28);
+      --black:        #1e232f;
+      --grey-text:    #5e6680;
+      --grey-muted:   #6b7280;
+      --grey-border:  #e5e7ef;
+      --grey-bg:      #f4f5f8;
+      --red:          #be123c;
+      --red-bg:       #fff5f6;
+      --red-border:   #fecdd3;
+      --green:        #16a34a;
+      --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #e7e8ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    /* ════════════════════════════
+       CARD
+    ════════════════════════════ */
+    article.card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.05),
+        0 2px 6px  rgba(0,0,0,0.05),
+        0 12px 40px rgba(0,0,0,0.10);
+      width: 520px;
+      max-width: 100%;
+      overflow: hidden;
+      animation: card-in 0.5s var(--ease-out) both;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
+      to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+    }
+
+    /* ════════════════════════════
+       LOGO BAR
+    ════════════════════════════ */
+    header[data-ui="logo"] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 26px 32px;
+      border-bottom: 1px solid var(--grey-border);
+    }
+
+    /* ════════════════════════════
+       MAIN BODY
+    ════════════════════════════ */
+    main[data-section="preferences"] {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      padding: 28px 32px 32px;
+    }
+
+    /* ════════════════════════════
+       TITLE BLOCK
+    ════════════════════════════ */
+    div[data-ui="title"] {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    div[data-ui="title"] h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    div[data-ui="title"] p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--grey-text);
+      line-height: 1.6;
+      letter-spacing: -0.1px;
+    }
+
+    /* ════════════════════════════
+       SECTION WRAPPER
+    ════════════════════════════ */
+    section[data-section] {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--grey-muted);
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    /* ════════════════════════════
+       EMAIL LIST — optional
+    ════════════════════════════ */
+    ul[data-ui="email-list"] {
+      list-style: none;
+      border: 1px solid var(--grey-border);
+      border-radius: 13px;
+      overflow: hidden;
+    }
+
+    li[data-ui="email-item"] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: background 140ms ease;
+      user-select: none;
+    }
+    li[data-ui="email-item"] + li[data-ui="email-item"] {
+      border-top: 1px solid var(--grey-border);
+    }
+    li[data-ui="email-item"]:first-child { border-radius: 12px 12px 0 0; }
+    li[data-ui="email-item"]:last-child  { border-radius: 0 0 12px 12px; }
+    li[data-ui="email-item"]:hover       { background: #f1f2f6; }
+
+    /* ── ITEM LABEL ── */
+    .item-label {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      min-width: 0;
+    }
+    .item-label strong {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--black);
+      letter-spacing: -0.2px;
+    }
+    .item-label span {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--grey-text);
+      letter-spacing: -0.1px;
+    }
+
+    /* ════════════════════════════
+       STATE CHIP  (replaces toggle)
+       — Inactif  /  ✓ Actif
+    ════════════════════════════ */
+    .state-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      border-radius: 99px;
+      border: 1.5px solid var(--grey-border);
+      background: white;
+      font-family: 'Roboto', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey-muted);
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background    240ms var(--ease-out),
+        border-color  240ms var(--ease-out),
+        color         180ms ease,
+        box-shadow    200ms ease,
+        transform      80ms ease;
+    }
+    .state-chip:focus-visible {
+      outline: 3px solid var(--blue-dim);
+      outline-offset: 2px;
+    }
+    .state-chip:hover {
+      border-color: #c8cad4;
+    }
+    .state-chip:active {
+      transform: scale(0.94);
+    }
+    .state-chip.on {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+      box-shadow: 0 2px 10px var(--blue-dim);
+    }
+    .state-chip.on:hover {
+      background: #1080d8;
+      border-color: #1080d8;
+    }
+
+    /* Chip icon — spring pop when toggling on */
+    .chip-icon {
+      font-style: normal;
+      font-size: 11px;
+      line-height: 1;
+      display: inline-block;
+      transition: transform 320ms var(--ease-spring);
+    }
+    .state-chip.on .chip-icon {
+      transform: scale(1.2);
+    }
+
+    /* ════════════════════════════
+       EMAIL LOCKED — essential
+    ════════════════════════════ */
+    div[data-ui="email-locked"] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      background: var(--grey-bg);
+      border: 1px solid var(--grey-border);
+      border-radius: 13px;
+    }
+    div[data-ui="email-locked"] .item-label strong {
+      color: var(--grey-text);
+    }
+    div[data-ui="email-locked"] .item-label span {
+      color: var(--grey-muted);
+    }
+
+    .lock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      background: var(--grey-border);
+      border-radius: 99px;
+      flex-shrink: 0;
+      cursor: default;
+      position: relative;
+    }
+    .lock-badge .lock-icon { font-size: 11px; }
+    .lock-badge .lock-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--grey-text);
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+    }
+    /* Tooltip */
+    .lock-badge::before {
+      content: 'Impossible de désactiver';
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      background: var(--black);
+      color: white;
+      font-size: 11px;
+      font-weight: 400;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity 150ms ease, transform 150ms var(--ease-out);
+    }
+    .lock-badge::after {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 3px);
+      right: 18px;
+      border: 5px solid transparent;
+      border-top-color: var(--black);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .lock-badge:hover::before,
+    .lock-badge:hover::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ════════════════════════════
+       CTA BUTTON
+    ════════════════════════════ */
+    button[data-ui="cta"] {
+      width: 100%;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 24px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      transition:
+        transform    80ms ease,
+        opacity     150ms ease,
+        background  300ms var(--ease-out),
+        box-shadow  200ms ease;
+    }
+    button[data-ui="cta"]:focus-visible {
+      outline: 3px solid var(--blue-dim);
+      outline-offset: 2px;
+    }
+    button[data-ui="cta"]:hover {
+      opacity: 0.93;
+      box-shadow: 0 4px 24px var(--blue-dim);
+    }
+    button[data-ui="cta"]:active {
+      transform: scale(0.98);
+      opacity: 0.85;
+    }
+    button[data-ui="cta"].success {
+      background: var(--green);
+      transform: scale(1.01);
+      box-shadow: 0 4px 20px rgba(22,163,74,0.28);
+    }
+    .check-icon {
+      display: inline-block;
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      margin-right: 0;
+      transform: scale(0.5) rotate(-10deg);
+      transition:
+        opacity      200ms ease,
+        transform    300ms var(--ease-spring),
+        width        220ms var(--ease-out),
+        margin-right 220ms var(--ease-out);
+    }
+    button[data-ui="cta"].success .check-icon {
+      opacity: 1;
+      width: 1em;
+      margin-right: 8px;
+      transform: scale(1) rotate(0deg);
+    }
+
+    /* ════════════════════════════
+       DANGER ZONE
+    ════════════════════════════ */
+    div[data-section="danger"] {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      border-radius: 13px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .danger-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--red);
+      letter-spacing: -0.2px;
+      margin-bottom: 3px;
+    }
+    .danger-desc {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--red);
+      line-height: 1.55;
+      opacity: 0.75;
+    }
+    button[data-ui="danger-btn"] {
+      width: 100%;
+      background: white;
+      border: 1.5px solid var(--red-border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--red);
+      letter-spacing: -0.1px;
+      cursor: pointer;
+      transition:
+        background    200ms ease,
+        color         200ms ease,
+        border-color  200ms ease,
+        transform     100ms ease;
+    }
+    button[data-ui="danger-btn"]:focus-visible {
+      outline: 3px solid rgba(190,18,60,0.28);
+      outline-offset: 2px;
+    }
+    button[data-ui="danger-btn"]:hover {
+      background: #fff1f2;
+      color: #9f1239;
+      border-color: #fda4af;
+    }
+    button[data-ui="danger-btn"]:active {
+      transform: scale(0.97);
+    }
+    button[data-ui="danger-btn"].shake {
+      animation: shake 400ms ease;
+    }
+    @keyframes shake {
+      0%   { transform: translateX(0); }
+      15%  { transform: translateX(-5px); }
+      30%  { transform: translateX(5px); }
+      45%  { transform: translateX(-4px); }
+      60%  { transform: translateX(4px); }
+      75%  { transform: translateX(-2px); }
+      90%  { transform: translateX(2px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* ════════════════════════════
+       FOOTER
+    ════════════════════════════ */
+    footer[data-ui="footer"] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 32px 24px;
+      border-top: 1px solid var(--grey-border);
+    }
+    footer[data-ui="footer"] p {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--grey-muted);
+      text-align: center;
+      line-height: 1.5;
+      letter-spacing: -0.1px;
+    }
+
+    /* ════════════════════════════
+       TOAST
+    ════════════════════════════ */
+    div[data-ui="toast"] {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--black);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform 380ms var(--ease-spring),
+        opacity   300ms ease;
+    }
+    div[data-ui="toast"].visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div data-ui="toast" id="toast">✓ Préférences enregistrées</div>
+
+  <article class="card" data-section="notification-card">
+
+    <!-- ── LOGO ── -->
+    <header data-ui="logo">
+      <svg width="110" height="33" viewBox="0 0 163 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M24.088 48.6181C37.3913 48.6181 48.176 37.7344 48.176 24.309C48.176 10.8837 37.3913 0 24.088 0C10.7847 0 0 10.8837 0 24.309C0 37.7344 10.7847 48.6181 24.088 48.6181ZM24.088 39.5022C32.4024 39.5022 39.143 32.6997 39.143 24.309C39.143 15.9184 32.4024 9.11589 24.088 9.11589C15.7736 9.11589 9.033 15.9184 9.033 24.309C9.033 32.6997 15.7736 39.5022 24.088 39.5022ZM54.1982 2.52674C54.1982 1.78261 54.7308 1.14922 55.4574 1.02768V1.02633L61.4794 0.0215545C62.3974 -0.131052 63.2312 0.582013 63.2312 1.52061V12.2206C66.2729 10.2557 69.8901 9.11583 73.7696 9.11583C84.5785 9.11583 93.3411 17.9589 93.3411 28.8669C93.3411 39.7749 84.5785 48.618 73.7696 48.618C69.8901 48.618 66.2729 47.4782 63.2312 45.5132V47.0987C63.2312 47.9374 62.5567 48.618 61.7257 48.618H55.7037C54.8726 48.618 54.1982 47.9374 54.1982 47.0987V2.52674ZM73.7696 39.5021C79.5896 39.5021 84.3081 34.7403 84.3081 28.8669C84.3081 22.9936 79.5896 18.2317 73.7696 18.2317C67.9497 18.2317 63.2312 22.9936 63.2312 28.8669C63.2312 34.7403 67.9497 39.5021 73.7696 39.5021ZM117.43 48.6181C121.31 48.6181 124.927 47.4783 127.969 45.5133V47.0988C127.969 47.9375 128.643 48.6181 129.474 48.6181H135.496C136.327 48.6181 137.002 47.9375 137.002 47.0988V11.6535C137.002 10.9107 136.469 10.276 135.744 10.1544L129.722 9.14157C128.804 8.98761 127.969 9.70202 127.969 10.6406V12.2207C124.927 10.2557 121.31 9.11591 117.43 9.11591C106.621 9.11591 97.8586 17.959 97.8586 28.867C97.8586 39.775 106.621 48.6181 117.43 48.6181ZM117.43 39.5022C123.25 39.5022 127.969 34.7403 127.969 28.867C127.969 22.9937 123.25 18.2318 117.43 18.2318C111.61 18.2318 106.892 22.9937 106.892 28.867C106.892 34.7403 111.61 39.5022 117.43 39.5022ZM147.033 0.0243802C146.116 -0.129577 145.28 0.584838 145.28 1.52344V9.11596H143.022C142.191 9.11596 141.517 9.79661 141.517 10.6353V16.7125C141.517 17.5512 142.191 18.2318 143.022 18.2318H145.28V40.2612C145.28 44.8773 148.988 48.6181 153.561 48.6181H161.088C161.919 48.6181 162.594 47.9375 162.594 47.0988V41.0216C162.594 40.1829 161.919 39.5023 161.088 39.5023H155.818C154.987 39.5023 154.313 38.8216 154.313 37.9829V18.2318H161.088C161.919 18.2318 162.594 17.5512 162.594 16.7125V10.6353C162.594 9.79661 161.919 9.11596 161.088 9.11596H154.313V2.53631C154.313 1.79354 153.782 1.1588 153.055 1.03726L147.033 0.0243802Z" fill="var(--black)"/>
+      </svg>
+    </header>
+
+    <!-- ── BODY ── -->
+    <main data-section="preferences">
+
+      <!-- Title -->
+      <div data-ui="title">
+        <h1>Gérer vos notifications</h1>
+        <p>Choisissez les emails que vous souhaitez recevoir. Vos préférences sont enregistrées immédiatement.</p>
+      </div>
+
+      <!-- Optional emails -->
+      <section data-section="optional">
+        <p class="section-label">Emails optionnels</p>
+        <ul data-ui="email-list">
+
+          <li data-ui="email-item" data-id="customer-service">
+            <div class="item-label">
+              <strong>Customer Service</strong>
+              <span>Activité et évolutions de votre compte</span>
+            </div>
+            <button class="state-chip" role="switch" aria-checked="false" aria-label="Activer Customer Service">
+              <i class="chip-icon">–</i>
+              <span class="chip-label">Inactif</span>
+            </button>
+          </li>
+
+          <li data-ui="email-item" data-id="offres">
+            <div class="item-label">
+              <strong>Offres et bons plans</strong>
+              <span>Conseils, nouveautés produit et opportunités</span>
+            </div>
+            <button class="state-chip" role="switch" aria-checked="false" aria-label="Activer Offres et bons plans">
+              <i class="chip-icon">–</i>
+              <span class="chip-label">Inactif</span>
+            </button>
+          </li>
+
+          <li data-ui="email-item" data-id="marketing">
+            <div class="item-label">
+              <strong>Marketing</strong>
+              <span>Communications, actualités et campagnes BTP</span>
+            </div>
+            <button class="state-chip on" role="switch" aria-checked="true" aria-label="Désactiver Marketing">
+              <i class="chip-icon">✓</i>
+              <span class="chip-label">Actif</span>
+            </button>
+          </li>
+
+        </ul>
+      </section>
+
+      <!-- Essential emails -->
+      <section data-section="essential">
+        <p class="section-label">Emails essentiels</p>
+        <div data-ui="email-locked">
+          <div class="item-label">
+            <strong>Maintenance et Support</strong>
+            <span>Incidents, maintenances, réponses support</span>
+          </div>
+          <div class="lock-badge">
+            <span class="lock-icon">🔒</span>
+            <span class="lock-text">Toujours actif</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <button data-ui="cta" id="ctaBtn" onclick="savePreferences()">
+        <span class="check-icon">✓</span>
+        <span class="btn-text">Enregistrer mes préférences</span>
+      </button>
+
+      <!-- Danger zone -->
+      <div data-section="danger">
+        <p class="danger-title">Se désabonner de tous les emails</p>
+        <p class="danger-desc">Vous ne recevrez plus aucun email, sauf les messages essentiels.</p>
+        <button data-ui="danger-btn" id="dangerBtn" onclick="confirmUnsubscribe()">
+          Me désabonner de tout
+        </button>
+      </div>
+
+    </main>
+
+    <!-- ── FOOTER ── -->
+    <footer data-ui="footer">
+      <p>Cet email a été envoyé à votre adresse. © 2026 Obat — Tous droits réservés.</p>
+    </footer>
+
+  </article>
+
+
+  <script>
+    /* ════════════════════════════
+       STATE CHIP
+    ════════════════════════════ */
+    function toggleChip(chip) {
+      const isOn = chip.classList.toggle('on');
+      chip.setAttribute('aria-checked', isOn);
+      const label = chip.closest('li').querySelector('strong').textContent;
+      chip.setAttribute('aria-label', (isOn ? 'Désactiver ' : 'Activer ') + label);
+      chip.querySelector('.chip-icon').textContent  = isOn ? '✓' : '–';
+      chip.querySelector('.chip-label').textContent = isOn ? 'Actif' : 'Inactif';
+    }
+
+    /* Row click → toggle the chip */
+    document.querySelectorAll('li[data-ui="email-item"]').forEach(row => {
+      row.addEventListener('click', () => toggleChip(row.querySelector('.state-chip')));
+    });
+
+    /* Chip click — stop propagation so row handler doesn't double-fire */
+    document.querySelectorAll('.state-chip').forEach(chip => {
+      chip.addEventListener('click', e => e.stopPropagation());
+      chip.addEventListener('click', () => toggleChip(chip));
+    });
+
+    /* ════════════════════════════
+       SAVE PREFERENCES
+    ════════════════════════════ */
+    let saving = false;
+    function savePreferences() {
+      if (saving) return;
+      saving = true;
+      const btn     = document.getElementById('ctaBtn');
+      const btnText = btn.querySelector('.btn-text');
+      btn.classList.add('success');
+      btnText.textContent = 'Préférences enregistrées';
+      document.getElementById('toast').classList.add('visible');
+      setTimeout(() => {
+        btn.classList.remove('success');
+        btnText.textContent = 'Enregistrer mes préférences';
+        document.getElementById('toast').classList.remove('visible');
+        saving = false;
+      }, 2800);
+    }
+
+    /* ════════════════════════════
+       DANGER — double-confirm + shake
+    ════════════════════════════ */
+    let confirmStep = 0;
+    function confirmUnsubscribe() {
+      const btn = document.getElementById('dangerBtn');
+      if (confirmStep === 0) {
+        btn.textContent = 'Confirmer le désabonnement ?';
+        btn.style.background = '#fff1f2';
+        btn.style.color      = '#9f1239';
+        confirmStep = 1;
+        setTimeout(() => {
+          if (confirmStep !== 1) return;
+          btn.textContent      = 'Me désabonner de tout';
+          btn.style.background = '';
+          btn.style.color      = '';
+          confirmStep = 0;
+        }, 3000);
+      } else {
+        btn.classList.remove('shake');
+        void btn.offsetWidth; /* reflow */
+        btn.classList.add('shake');
+        btn.textContent      = 'Me désabonner de tout';
+        btn.style.background = '';
+        btn.style.color      = '';
+        confirmStep = 0;
+        btn.addEventListener('animationend', () => btn.classList.remove('shake'), { once: true });
+      }
+    }
+  </script>
+
+</body>
+</html>
