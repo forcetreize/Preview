@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obat — Gérer vos notifications (Motion Demo)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ── REDUCED MOTION — CRITICAL ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── TOKENS ── */
+    :root {
+      --blue: #1591f0;
+      --blue-hover: rgba(21,145,240,0.35);
+      --black: #1e232f;
+      --grey-text: #7c83a1;
+      --grey-muted: #9ca3af;
+      --grey-border: #e5e7ef;
+      --grey-bg: #f8f9fa;
+      --grey-toggle: #e5e7ef;
+      --red: #be123c;
+      --red-bg: #fff5f5;
+      --red-border: #fecdd3;
+      --green: #16a34a;
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #ebecf0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    /* ── BADGE ── */
+    .demo-badge {
+      position: fixed; top: 16px; right: 16px;
+      background: var(--black); color: white;
+      font-size: 11px; font-weight: 500;
+      padding: 6px 12px; border-radius: 99px;
+      opacity: 0.8; z-index: 99;
+    }
+
+    /* ══════════════════════════════════════
+       CARD — entrance animation (Jakub)
+    ══════════════════════════════════════ */
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.10);
+      width: 520px;
+      max-width: 100%;
+      overflow: hidden;
+
+      /* Jakub entrance */
+      animation: card-in 0.5s var(--ease-out) both;
+    }
+
+    @keyframes card-in {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+        filter: blur(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+      }
+    }
+
+    /* ── LOGO BAR ── */
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 32px 24px;
+    }
+    .logo {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: -1px;
+    }
+
+    /* ── BODY ── */
+    .body {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 28px 32px;
+    }
+
+    /* ── TITLE BLOCK ── */
+    .title-block { display: flex; flex-direction: column; gap: 6px; }
+    .title {
+      font-size: 22px; font-weight: 700;
+      color: var(--black); letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .subtitle {
+      font-size: 14px; font-weight: 400;
+      color: var(--grey-text); line-height: 1.5;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--grey-muted);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* ══════════════════════════════════════
+       OPT ROWS — hover state (Jakub)
+    ══════════════════════════════════════ */
+    .opt-rows {
+      border: 1px solid var(--grey-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .opt-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      cursor: pointer;
+      /* Jakub hover */
+      transition: background 160ms ease;
+      position: relative;
+    }
+    .opt-row + .opt-row {
+      border-top: 1px solid var(--grey-border);
+    }
+    .opt-row:hover { background: var(--grey-bg); }
+    .opt-row:first-child { border-radius: 9px 9px 0 0; }
+    .opt-row:last-child  { border-radius: 0 0 9px 9px; }
+
+    .row-left { display: flex; flex-direction: column; gap: 2px; }
+    .row-title {
+      font-size: 15px; font-weight: 500;
+      color: var(--black); letter-spacing: -0.2px;
+    }
+    .row-desc {
+      font-size: 13px; font-weight: 400;
+      color: var(--grey-text); letter-spacing: -0.1px;
+    }
+
+    /* ══════════════════════════════════════
+       TOGGLE — spring thumb + squish (Jhey)
+    ══════════════════════════════════════ */
+    .toggle {
+      width: 44px; height: 24px;
+      background: var(--grey-toggle);
+      border-radius: 99px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      /* background color transition */
+      transition: background 260ms var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      border: none;
+    }
+    .toggle:focus-visible {
+      box-shadow: 0 0 0 3px rgba(21,145,240,0.3);
+    }
+    .toggle.on { background: var(--blue); }
+
+    /* Thumb */
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 20px; height: 20px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      /* spring — Jhey */
+      transition:
+        transform 280ms var(--ease-spring),
+        width 160ms var(--ease-out);
+    }
+    .toggle.on::after {
+      transform: translateX(20px);
+    }
+
+    /* Squish au clic */
+    .toggle:active::after {
+      width: 24px;
+    }
+    .toggle.on:active::after {
+      width: 24px;
+      transform: translateX(16px);
+    }
+
+    /* ── TRANS ROW (locked) ── */
+    .trans-row {
+      background: var(--grey-bg);
+      border: 1px solid var(--grey-border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+    }
+    .trans-left { display: flex; flex-direction: column; gap: 2px; }
+    .trans-title {
+      font-size: 15px; font-weight: 500;
+      color: var(--grey-text); letter-spacing: -0.2px;
+    }
+    .trans-desc {
+      font-size: 13px; font-weight: 400;
+      color: var(--grey-muted); letter-spacing: -0.1px;
+    }
+    .lock-badge {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--grey-border);
+      padding: 4px 10px; border-radius: 20px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .lock-icon { font-size: 12px; }
+    .lock-text {
+      font-size: 11px; font-weight: 500;
+      color: var(--grey-text); letter-spacing: 0.1px;
+      white-space: nowrap;
+    }
+
+    /* Lock tooltip */
+    .lock-badge::before {
+      content: 'Impossible de désactiver';
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      background: var(--black);
+      color: white;
+      font-size: 11px;
+      font-weight: 400;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 150ms ease, transform 150ms var(--ease-out);
+    }
+    .lock-badge::after {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 3px);
+      right: 16px;
+      border: 5px solid transparent;
+      border-top-color: var(--black);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .lock-badge:hover::before,
+    .lock-badge:hover::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ══════════════════════════════════════
+       CTA BUTTON — press + save feedback (Emil + Jakub)
+    ══════════════════════════════════════ */
+    .cta-btn {
+      width: 100%;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 24px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      /* Emil press feedback */
+      transition:
+        transform 80ms ease,
+        opacity 150ms ease,
+        background 300ms var(--ease-out),
+        box-shadow 200ms ease;
+    }
+    .cta-btn:hover {
+      opacity: 0.92;
+      box-shadow: 0 4px 20px var(--blue-hover);
+    }
+    .cta-btn:active {
+      transform: scale(0.98);
+      opacity: 0.85;
+    }
+    .cta-btn.success {
+      background: var(--green);
+      transform: scale(1.01);
+      box-shadow: 0 4px 20px rgba(22,163,74,0.3);
+    }
+    .cta-btn .check-icon {
+      display: inline-block;
+      opacity: 0;
+      transform: scale(0.5) rotate(-10deg);
+      transition:
+        opacity 200ms ease,
+        transform 300ms var(--ease-spring);
+    }
+    .cta-btn.success .check-icon {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+    /* ══════════════════════════════════════
+       DANGER ZONE — friction visuelle (Emil)
+    ══════════════════════════════════════ */
+    .danger {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .danger-title {
+      font-size: 14px; font-weight: 600;
+      color: var(--red); letter-spacing: -0.2px;
+    }
+    .danger-desc {
+      font-size: 12px; font-weight: 400;
+      color: var(--red); letter-spacing: -0.1px;
+      line-height: 1.5;
+    }
+
+    .danger-btn {
+      width: 100%;
+      background: white;
+      border: 1px solid var(--red-border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--red);
+      letter-spacing: -0.1px;
+      cursor: pointer;
+      /* Emil friction — transition plus lente = sentiment de poids */
+      transition:
+        background 200ms ease,
+        color 200ms ease,
+        border-color 200ms ease,
+        transform 100ms ease;
+    }
+    .danger-btn:hover {
+      background: #fff1f2;
+      color: #9f1239;
+      border-color: #fda4af;
+    }
+    .danger-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Shake sur confirm */
+    .danger-btn.shake {
+      animation: shake 400ms ease;
+    }
+    @keyframes shake {
+      0%   { transform: translateX(0); }
+      15%  { transform: translateX(-5px); }
+      30%  { transform: translateX(5px); }
+      45%  { transform: translateX(-4px); }
+      60%  { transform: translateX(4px); }
+      75%  { transform: translateX(-2px); }
+      90%  { transform: translateX(2px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* ── FOOTER ── */
+    .footer-div {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      padding: 16px 32px 24px;
+    }
+    .sep {
+      width: 100%;
+      height: 1px;
+      background: var(--grey-border);
+    }
+    .footer-text {
+      font-size: 12px; font-weight: 400;
+      color: var(--grey-muted);
+      text-align: center;
+      line-height: 1.5;
+      letter-spacing: -0.1px;
+    }
+
+    /* ══════════════════════════════════════
+       TOAST NOTIFICATION — Jakub
+    ══════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--black);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      z-index: 999;
+      opacity: 0;
+      transition:
+        transform 380ms var(--ease-spring),
+        opacity 300ms ease;
+      pointer-events: none;
+    }
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <div class="demo-badge">✦ Motion Demo — Obat Notifications</div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">✓ Préférences enregistrées avec succès</div>
+
+  <!-- ══ CARD ══ -->
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-bar">
+      <svg width="120" height="36" viewBox="0 0 163 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M24.088 48.6181C37.3913 48.6181 48.176 37.7344 48.176 24.309C48.176 10.8837 37.3913 0 24.088 0C10.7847 0 0 10.8837 0 24.309C0 37.7344 10.7847 48.6181 24.088 48.6181ZM24.088 39.5022C32.4024 39.5022 39.143 32.6997 39.143 24.309C39.143 15.9184 32.4024 9.11589 24.088 9.11589C15.7736 9.11589 9.033 15.9184 9.033 24.309C9.033 32.6997 15.7736 39.5022 24.088 39.5022ZM54.1982 2.52674C54.1982 1.78261 54.7308 1.14922 55.4574 1.02768V1.02633L61.4794 0.0215545C62.3974 -0.131052 63.2312 0.582013 63.2312 1.52061V12.2206C66.2729 10.2557 69.8901 9.11583 73.7696 9.11583C84.5785 9.11583 93.3411 17.9589 93.3411 28.8669C93.3411 39.7749 84.5785 48.618 73.7696 48.618C69.8901 48.618 66.2729 47.4782 63.2312 45.5132V47.0987C63.2312 47.9374 62.5567 48.618 61.7257 48.618H55.7037C54.8726 48.618 54.1982 47.9374 54.1982 47.0987V2.52674ZM73.7696 39.5021C79.5896 39.5021 84.3081 34.7403 84.3081 28.8669C84.3081 22.9936 79.5896 18.2317 73.7696 18.2317C67.9497 18.2317 63.2312 22.9936 63.2312 28.8669C63.2312 34.7403 67.9497 39.5021 73.7696 39.5021ZM117.43 48.6181C121.31 48.6181 124.927 47.4783 127.969 45.5133V47.0988C127.969 47.9375 128.643 48.6181 129.474 48.6181H135.496C136.327 48.6181 137.002 47.9375 137.002 47.0988V11.6535C137.002 10.9107 136.469 10.276 135.744 10.1544L129.722 9.14157C128.804 8.98761 127.969 9.70202 127.969 10.6406V12.2207C124.927 10.2557 121.31 9.11591 117.43 9.11591C106.621 9.11591 97.8586 17.959 97.8586 28.867C97.8586 39.775 106.621 48.6181 117.43 48.6181ZM117.43 39.5022C123.25 39.5022 127.969 34.7403 127.969 28.867C127.969 22.9937 123.25 18.2318 117.43 18.2318C111.61 18.2318 106.892 22.9937 106.892 28.867C106.892 34.7403 111.61 39.5022 117.43 39.5022ZM147.033 0.0243802C146.116 -0.129577 145.28 0.584838 145.28 1.52344V9.11596H143.022C142.191 9.11596 141.517 9.79661 141.517 10.6353V16.7125C141.517 17.5512 142.191 18.2318 143.022 18.2318H145.28V40.2612C145.28 44.8773 148.988 48.6181 153.561 48.6181H161.088C161.919 48.6181 162.594 47.9375 162.594 47.0988V41.0216C162.594 40.1829 161.919 39.5023 161.088 39.5023H155.818C154.987 39.5023 154.313 38.8216 154.313 37.9829V18.2318H161.088C161.919 18.2318 162.594 17.5512 162.594 16.7125V10.6353C162.594 9.79661 161.919 9.11596 161.088 9.11596H154.313V2.53631C154.313 1.79354 153.782 1.1588 153.055 1.03726L147.033 0.0243802Z" fill="#1591F0"/>
+      </svg>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- Title -->
+      <div class="title-block">
+        <p class="title">Gérer vos notifications</p>
+        <p class="subtitle">Choisissez les emails que vous souhaitez recevoir. Vos préférences sont enregistrées immédiatement.</p>
+      </div>
+
+      <!-- Optional emails -->
+      <div>
+        <p class="section-label">Emails optionnels</p>
+        <div class="opt-rows">
+
+          <div class="opt-row" onclick="toggleRow(this)">
+            <div class="row-left">
+              <p class="row-title">Customer Service</p>
+              <p class="row-desc">Activité et évolutions de votre compte</p>
+            </div>
+            <button class="toggle" aria-label="Activer Customer Service" role="switch" aria-checked="false"></button>
+          </div>
+
+          <div class="opt-row" onclick="toggleRow(this)">
+            <div class="row-left">
+              <p class="row-title">Offres et bons plans</p>
+              <p class="row-desc">Conseils, nouveautés produit et opportunités</p>
+            </div>
+            <button class="toggle" aria-label="Activer Offres" role="switch" aria-checked="false"></button>
+          </div>
+
+          <div class="opt-row" onclick="toggleRow(this)">
+            <div class="row-left">
+              <p class="row-title">Marketing</p>
+              <p class="row-desc">Communications, actualités et campagnes BTP</p>
+            </div>
+            <button class="toggle on" aria-label="Activer Marketing" role="switch" aria-checked="true"></button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Essential emails -->
+      <div>
+        <p class="section-label">Emails essentiels</p>
+        <div class="trans-row">
+          <div class="trans-left">
+            <p class="trans-title">Maintenance et Support</p>
+            <p class="trans-desc">Incidents, maintenances, réponses support</p>
+          </div>
+          <div class="lock-badge">
+            <span class="lock-icon">🔒</span>
+            <span class="lock-text">Toujours actif</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <button class="cta-btn" id="ctaBtn" onclick="savePreferences()">
+        <span class="check-icon">✓</span>
+        <span class="btn-text">Enregistrer mes préférences</span>
+      </button>
+
+      <!-- Danger zone -->
+      <div class="danger">
+        <div>
+          <p class="danger-title">Se désabonner de tous les emails</p>
+          <p class="danger-desc">Vous ne recevrez plus aucun email, sauf les messages essentiels.</p>
+        </div>
+        <button class="danger-btn" id="dangerBtn" onclick="confirmUnsubscribe()">
+          Me désabonner de tout
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-div">
+      <div class="sep"></div>
+      <p class="footer-text">Cet email a été envoyé à votre adresse. © 2026 Obat — Tous droits réservés.</p>
+    </div>
+
+  </div>
+
+
+  <script>
+    /* ══ TOGGLE ══ */
+    function toggleRow(row) {
+      // Ignore si le clic vient du bouton directement
+      const toggle = row.querySelector('.toggle');
+      const isOn = toggle.classList.toggle('on');
+      toggle.setAttribute('aria-checked', isOn);
+    }
+
+    // Empêcher double-trigger quand on clique directement sur le toggle
+    document.querySelectorAll('.toggle').forEach(t => {
+      t.addEventListener('click', e => e.stopPropagation());
+      t.addEventListener('click', () => {
+        const isOn = t.classList.toggle('on');
+        t.setAttribute('aria-checked', isOn);
+      });
+    });
+
+    /* ══ SAVE PREFERENCES ══ */
+    let saving = false;
+    function savePreferences() {
+      if (saving) return;
+      saving = true;
+
+      const btn = document.getElementById('ctaBtn');
+      const btnText = btn.querySelector('.btn-text');
+
+      btn.classList.add('success');
+      btnText.textContent = 'Préférences enregistrées';
+
+      // Toast
+      const toast = document.getElementById('toast');
+      toast.classList.add('visible');
+
+      setTimeout(() => {
+        btn.classList.remove('success');
+        btnText.textContent = 'Enregistrer mes préférences';
+        toast.classList.remove('visible');
+        saving = false;
+      }, 2800);
+    }
+
+    /* ══ DANGER — shake ══ */
+    let confirmStep = 0;
+    function confirmUnsubscribe() {
+      const btn = document.getElementById('dangerBtn');
+
+      if (confirmStep === 0) {
+        // Premier clic — demander confirmation
+        btn.textContent = 'Confirmer le désabonnement ?';
+        btn.style.background = '#fff1f2';
+        btn.style.color = '#9f1239';
+        confirmStep = 1;
+
+        // Reset auto après 3s
+        setTimeout(() => {
+          if (confirmStep === 1) {
+            btn.textContent = 'Me désabonner de tout';
+            btn.style.background = '';
+            btn.style.color = '';
+            confirmStep = 0;
+          }
+        }, 3000);
+
+      } else {
+        // Deuxième clic — shake
+        btn.classList.remove('shake');
+        void btn.offsetWidth; // reflow
+        btn.classList.add('shake');
+        btn.textContent = 'Me désabonner de tout';
+        btn.style.background = '';
+        btn.style.color = '';
+        confirmStep = 0;
+
+        btn.addEventListener('animationend', () => {
+          btn.classList.remove('shake');
+        }, { once: true });
+      }
+    }
+  </script>
+
+</body>
+</html>
