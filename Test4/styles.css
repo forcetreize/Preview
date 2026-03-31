@@ -253,13 +253,13 @@ img { display: block; max-width: 100%; }
   background: var(--color-border);
 }
 
-/* Title */
+/* Title — fluid scale: 24px (390) → 38px (1280+) */
 .hero__title {
   font-family: var(--font-title);
-  font-size: 38px;
+  font-size: clamp(24px, 2.4vw + 10px, 38px);
   font-weight: 500;
-  line-height: 45px;
-  letter-spacing: 0.38px;
+  line-height: 1.18;
+  letter-spacing: 0.3px;
   color: var(--color-dark);
 }
 
@@ -274,10 +274,10 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  font-size: 16px;
+  font-size: clamp(14px, 1.1vw + 8px, 16px);
   font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: -0.16px;
+  line-height: 1.45;
+  letter-spacing: -0.14px;
   color: var(--color-muted);
 }
 
@@ -339,7 +339,7 @@ img { display: block; max-width: 100%; }
 .hero__visual {
   position: relative;
   width: 100%;
-  height: 380px;
+  height: clamp(260px, 28vw, 380px);
   border-radius: 24px;
   overflow: visible;
 }
@@ -526,12 +526,12 @@ img { display: block; max-width: 100%; }
 .banner__text { display: flex; flex-direction: column; gap: 4px; }
 
 .banner__heading {
-  font-size: 18px;
+  font-size: clamp(14px, 1.2vw + 5px, 18px);
   font-weight: 500;
-  letter-spacing: -0.18px;
+  letter-spacing: -0.16px;
   color: var(--color-body);
   line-height: 1.3;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .banner__sub {
@@ -603,8 +603,13 @@ img { display: block; max-width: 100%; }
 @media (max-width: 1100px) {
   :root { --side-pad: 40px; }
 
-  .hero__left  { flex: 0 0 460px; max-width: 460px; }
-  .hero__right { flex: 0 0 460px; max-width: 460px; }
+  /* Colonnes fluides : s'adaptent à la largeur dispo sans overflow */
+  .hero__left  { flex: 1 1 0; min-width: 0; max-width: none; }
+  .hero__right { flex: 1 1 0; min-width: 0; max-width: none; }
+
+  .hero__title { letter-spacing: 0.2px; }
+
+  .nav__phone { font-size: 14px; }
 }
 
 
@@ -670,7 +675,7 @@ img { display: block; max-width: 100%; }
   .hero__left  { flex: none; max-width: 100%; gap: 24px; order: 1; }
   .hero__right { flex: none; max-width: 100%; order: 2; }
 
-  .hero__title { font-size: 27px; line-height: 35px; }
+  /* hero__title géré par clamp() — pas d'override nécessaire */
 
   /* Full-width CTA */
   .hero__cta { align-items: stretch; gap: 16px; }
@@ -742,7 +747,7 @@ img { display: block; max-width: 100%; }
   }
 
   .banner__logos { width: 100%; max-width: 100%; }
-  .banner__heading { white-space: normal; font-size: 15px; }
+  /* banner__heading géré par clamp() — wrapping natif */
 }
 
 
@@ -750,7 +755,7 @@ img { display: block; max-width: 100%; }
    RESPONSIVE — Small mobile (≤ 480px)
    ============================================================ */
 @media (max-width: 480px) {
-  .hero__title { font-size: 24px; line-height: 32px; }
+  /* hero__title géré par clamp() — atteint 24px naturellement à 390px */
 
   .hero__ratings { flex-wrap: wrap; gap: 10px; }
   .rating__divider { display: none; }
