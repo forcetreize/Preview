@@ -26,7 +26,7 @@
         </svg>
       </a>
 
-      <nav data-ui="menu" class="nav__menu" aria-label="Navigation principale">
+      <nav data-ui="menu" id="nav-menu" class="nav__menu" aria-label="Navigation principale">
         <ul class="nav__list" role="list">
           <li class="nav__item">
             <a href="#fonctionnalites" class="nav__link">Fonctionnalités</a>
@@ -56,6 +56,12 @@
             <path d="M6 1L11 6L6 11M11 6H1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </a>
+        <!-- Hamburger — mobile only -->
+        <button data-ui="hamburger" class="nav__hamburger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
 
     </div>
@@ -284,5 +290,16 @@
 
   </main>
 
+  <script>
+    // Hamburger toggle
+    const burger = document.querySelector('[data-ui="hamburger"]');
+    const menu   = document.getElementById('nav-menu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        const open = burger.getAttribute('aria-expanded') === 'true';
+        burger.setAttribute('aria-expanded', String(!open));
+      });
+    }
+  </script>
 </body>
 </html>
